@@ -13,7 +13,6 @@
 // @grant        GM_xmlhttpRequest
 // @run-at       document-end
 // ==/UserScript==
-//https://localhost/test.js
 
 (function() {
     'use strict';

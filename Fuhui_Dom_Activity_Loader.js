@@ -18,18 +18,18 @@
     'use strict';
     GM_xmlhttpRequest({
         method: 'GET',
-        url: 'https://github.com/FuhuiNeko/BC_Mods/raw/main/Fuhui_Dom_Activity_Main.js',
+        url: 'https://github.com/FuhuiNeko/BC_Mods/raw/main/Fuhui_Dom_Activity_Main.js?t=' + new Date().getTime(),
         onload: function (response) {
             if (response.status == 200) {
                 let script = document.createElement('script')
                 script.textContent = response.responseText;
                 document.head.appendChild(script);
-                console.log('Fuhui - Sub Activity - 加载完成喵!');
+                console.log('Fuhui - Dom Activity - 加载完成喵!');
             } else { 
-                console.error('Fuhui - Sub Activity - 加载失败喵!', response.status, response.statusText); 
+                console.error('Fuhui - Dom Activity - 加载失败喵!', response.status, response.statusText); 
             }
         },onerror: function (error) { 
-            console.error('Fuhui - Sub Activity - 加载时发生了错误喵...', error); 
+            console.error('Fuhui - Dom Activity - 加载时发生了错误喵...', error); 
         }
     });
 })();

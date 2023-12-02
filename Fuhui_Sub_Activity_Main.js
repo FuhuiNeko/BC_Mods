@@ -45,14 +45,6 @@
                     Text: msg
                 });
             }
-        }else if (args[0] == "ChatRoomChat" && args[1]?.Type == "Chat") {
-            //console.log(args[1].Content.indexOf("x"),args[1].Content.replace("x","喵"));
-            //args[1].Content = args[1].Content.replace("'","喵");
-            //console.log(args);
-        }else{
-            if (args[0] == "ChatRoomChat" && args[1]?.Type != "Hidden") {
-                console.log(args);
-            }
         }
 
         return next(args);

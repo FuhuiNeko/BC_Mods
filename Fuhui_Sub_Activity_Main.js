@@ -1,3 +1,5 @@
+// @note         0.1 第一版 一些蹭 ()
+// @note         0.2 给一些动作限定条件,增加一些马娘的动作 (当然还不够完善)
 (function() {
     'use strict';
     // Bondage Club Mod Development Kit (1.1.0)
@@ -8,7 +10,7 @@
 	const mod = bcModSdk.registerMod({
 		name: '浮绘的mod - Sub Activity',
 		fullName: '浮绘的mod - Sub Activity',
-		version: '0.0.1',
+		version: '0.2',
 		repository: 'https://github.com/FuhuiNeko/BC_Mods/',
 	});
 
@@ -16,13 +18,16 @@
 
     const CustomImages = new Map();
     const ACT_Path = "Assets/Female3DCG/Activity/"
+    const ACT_Path_Ear = "Assets/Female3DCG/HairAccessory1/Preview/"
+    const ACT_Path_Shoes = "Assets/Female3DCG/Shoes/Preview/"
+    const ACT_Path_ItemMouth = "Assets/Female3DCG/ItemMouth/Preview/"
     const ACT_Ext = ".png"
 
     //图片替换喵
     mod.hookFunction("DrawImageResize", 1, (args, next) => {
         var path = args[0];
-        if (!!path && path.indexOf("FHMods_") > -1) {
-            var activityName = path.substring(path.indexOf("FHMods_"));
+        if (!!path && path.indexOf("FHMods_Sub_") > -1) {
+            var activityName = path.substring(path.indexOf("FHMods_Sub_"));
             activityName = activityName.substring(0, activityName.indexOf(".png"))
             if (CustomImages.has(activityName))
                 args[0] = CustomImages.get(activityName);
@@ -35,7 +40,7 @@
         if (args[0] == "ChatRoomChat" && args[1]?.Type == "Activity") {
             let data = args[1];
             let actName = data.Dictionary[3]?.ActivityName ?? "";
-            if (actName.indexOf("FHMods_") == 0) {
+            if (actName.indexOf("FHMods_Sub_") == 0) {
                 // 拦截自定义活动的发送并执行自定义操作
                 let { metadata, substitutions } = ChatRoomMessageRunExtractors(data, Player)
                 let msg = ActivityDictionaryText(data.Content);
@@ -48,6 +53,24 @@
         }
 
         return next(args);
+    });
+
+    //bcar
+    mod.hookFunction("ActivityCheckPrerequisite", 5, (args, next) => {
+        var prereqName = args[0];
+        if (CustomPrerequisiteFuncs.has(prereqName)) {
+            var acting = args[1];
+            var acted = args[2];
+            var targetGrp = args[3];
+            var customPrereqFunc = CustomPrerequisiteFuncs.get(prereqName);
+            if (!customPrereqFunc)
+                return next(args);
+            else {
+                return customPrereqFunc(acting, acted, targetGrp);
+            }
+        }
+        else
+            return next(args);
     });
 
     //载入的一些函数喵?
@@ -67,107 +90,176 @@
         addActivityEntry(actionName, `Other-${bodyPart}-${group}`, otherText);
         CustomImages.set(`${group}`, `${image}${imageName}${ACT_Ext}`);
     }
+
+    //
     
     var activitiesAll = [
         //头部
-        { Name: "FHMods_蹭脸", Target: ["ItemHead"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_微微点头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_微微摇头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_身体颤抖着点头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_身体颤抖着摇头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_看向它", Target: ["ItemHead"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_用头蹭脸", Target: ["ItemHead"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
+        { Name: "FHMods_Sub_用脸蹭脸", Target: ["ItemHead"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
+        { Name: "FHMods_Sub_微微点头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_微微摇头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_身体颤抖着点头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_身体颤抖着摇头", Target: [], TargetSelf: ["ItemHead"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_看向它", Target: ["ItemHead"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
 
         //鼻子
-        { Name: "FHMods_呼吸渐渐紊乱", Target: [], TargetSelf: ["ItemNose"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_呼吸渐渐恢复", Target: [], TargetSelf: ["ItemNose"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_呼吸渐渐紊乱", Target: [], TargetSelf: ["ItemNose"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_呼吸渐渐恢复", Target: [], TargetSelf: ["ItemNose"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
 
         //嘴
-        { Name: "FHMods_轻轻的喘气", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
-        { Name: "FHMods_面色潮红的喘气", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
-        { Name: "FHMods_嘟囔着想说什么", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsGagged"] },
+        { Name: "FHMods_Sub_马娘兴奋的嘶鸣", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["HasPonyGag"] },
+
+        { Name: "FHMods_Sub_轻轻的喘气", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_面色潮红的喘气", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_嘟囔着想说什么", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsGagged"] },
+        { Name: "FHMods_Sub_慢慢的伸出舌头", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseMouth"] },
+        { Name: "FHMods_Sub_兴奋的伸出舌头", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseMouth"] },
+        { Name: "FHMods_Sub_失神的伸出舌头", Target: [], TargetSelf: ["ItemMouth"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseMouth"] },
 
         //耳朵
-        { Name: "FHMods_抖抖耳朵1", Target: [], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
-        { Name: "FHMods_抖抖耳朵2", Target: [], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
-        { Name: "FHMods_轻轻的晃动耳朵", Target: [], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
-        { Name: "FHMods_用手摸耳朵", Target: ["ItemEars"], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseHands"], },
+        { Name: "FHMods_Sub_晃耳朵", Target: [], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_摇耳朵", Target: [], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_轻轻的晃动耳朵", Target: [], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_用手摸耳朵", Target: ["ItemEars"], TargetSelf: ["ItemEars"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseHands"], },
 
         //脖子
-        { Name: "FHMods_蹭脖子", Target: ["ItemNeck"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_缩脖子", Target: [], TargetSelf: ["ItemNeck"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_歪头并表达疑惑", Target: [], TargetSelf: ["ItemNeck"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_蹭脖子", Target: ["ItemNeck"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_缩脖子", Target: [], TargetSelf: ["ItemNeck"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_歪头并表达疑惑", Target: [], TargetSelf: ["ItemNeck"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
 
         //胸部
-        { Name: "FHMods_蹭乳房", Target: ["ItemBreast"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_用头蹭乳房", Target: ["ItemBreast"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"] },
+        { Name: "FHMods_Sub_用脸蹭乳房", Target: ["ItemBreast"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"] },
 
         //身体
-        { Name: "FHMods_扭动身子", Target: [], TargetSelf: ["ItemTorso"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseTorso"] },
-        { Name: "FHMods_活动四肢", Target: [], TargetSelf: ["ItemTorso"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
-        { Name: "FHMods_兴奋的扭动身子", Target: [], TargetSelf: ["ItemTorso"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_扭动身子", Target: [], TargetSelf: ["ItemTorso"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["UseTorso"] },
+        { Name: "FHMods_Sub_活动四肢", Target: [], TargetSelf: ["ItemTorso"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_兴奋的扭动身子", Target: [], TargetSelf: ["ItemTorso"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
 
         //手臂
-        { Name: "FHMods_蹭手臂", Target: ["ItemArms"], TargetSelf: ["ItemArms"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_用鼻子蹭手臂", Target: [], TargetSelf: ["ItemArms"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_用头蹭手臂", Target: ["ItemArms"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
+        { Name: "FHMods_Sub_用脸蹭手臂", Target: ["ItemArms"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
+        { Name: "FHMods_Sub_用鼻子蹭手臂", Target: [], TargetSelf: ["ItemArms"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
 
         //手
-        { Name: "FHMods_蹭手", Target: ["ItemHands"], TargetSelf: ["ItemHands"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
-        { Name: "FHMods_用鼻子蹭手", Target: [], TargetSelf: ["ItemHands"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [], },
+        { Name: "FHMods_Sub_用头蹭手", Target: ["ItemHands"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
+        { Name: "FHMods_Sub_用脸蹭手", Target: ["ItemHands"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
+        { Name: "FHMods_Sub_用鼻子蹭手", Target: [], TargetSelf: ["ItemHands"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["NotKneelingT"], },
 
+        //大腿
+        { Name: "FHMods_Sub_用头蹭大腿", Target: ["ItemLegs"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsKneelingSource"], },
+        { Name: "FHMods_Sub_用脸蹭大腿", Target: ["ItemLegs"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsKneelingSource"], },
+
+        //小腿
+        { Name: "FHMods_Sub_用头蹭小腿", Target: ["ItemFeet"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsKneelingSource"], },
+        { Name: "FHMods_Sub_用脸蹭小腿", Target: ["ItemFeet"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsKneelingSource"], },
+        
         //脚
-        { Name: "FHMods_蹭脚", Target: ["ItemBoots"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_用头蹭脚", Target: ["ItemBoots"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsKneelingSource"], },
+        { Name: "FHMods_Sub_用脸蹭脚", Target: ["ItemBoots"], TargetSelf: [], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["IsKneelingSource"], },
+        { Name: "FHMods_Sub_生气的跺脚", Target: [], TargetSelf: ["ItemBoots"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: [] },
+        { Name: "FHMods_Sub_马娘随意的踏蹄", Target: [], TargetSelf: ["ItemBoots"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["HasPonyBoots"] },
+        { Name: "FHMods_Sub_马娘兴奋的踏蹄", Target: [], TargetSelf: ["ItemBoots"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["HasPonyBoots"] },
+        { Name: "FHMods_Sub_马娘不安的踏蹄", Target: [], TargetSelf: ["ItemBoots"], MaxProgress: 50, MaxProgressSelf: 50, Prerequisite: ["HasPonyBoots"] },
     ];
     
     //图暂时还没替换喵 抱歉x
     mod.hookFunction("LoginResponse",5, (args, next) => {
         //头部
-        addAccAction1("蹭脸", "Other", "ItemHead", "FHMods_蹭脸", "SourceCharacter用脸蹭了蹭TargetCharacter的脸.", ACT_Path, "Kiss");
-        addAccAction1("微微点头", "Self", "ItemHead", "FHMods_微微点头", "SourceCharacter微微的点了点头.", ACT_Path, "Kiss");
-        addAccAction1("微微摇头", "Self", "ItemHead", "FHMods_微微摇头", "SourceCharacter微微的摇了摇头.", ACT_Path, "Kiss");
-        addAccAction1("身体颤抖点头", "Self", "ItemHead", "FHMods_身体颤抖着点头", "SourceCharacter浑身颤抖的点了点头.", ACT_Path, "Kiss");
-        addAccAction1("身体颤抖摇头", "Self", "ItemHead", "FHMods_身体颤抖着摇头", "SourceCharacter浑身颤抖的摇了摇头.", ACT_Path, "Kiss");
-        addAccAction1("看向它", "Other", "ItemHead", "FHMods_看向它", "SourceCharacter看向了TargetCharacter.", ACT_Path, "Kiss");
+        addAccAction1("头蹭脸", "Other", "ItemHead", "FHMods_Sub_用头蹭脸", "SourceCharacter用头蹭了蹭TargetCharacter的脸.", ACT_Path, "RestHead");
+        addAccAction1("脸蹭脸", "Other", "ItemHead", "FHMods_Sub_用脸蹭脸", "SourceCharacter用脸蹭了蹭TargetCharacter的脸.", ACT_Path, "RestHead");
+        addAccAction1("微微点头", "Self", "ItemHead", "FHMods_Sub_微微点头", "SourceCharacter微微的点了点头.", ACT_Path, "RestHead");
+        addAccAction1("微微摇头", "Self", "ItemHead", "FHMods_Sub_微微摇头", "SourceCharacter微微的摇了摇头.", ACT_Path, "RestHead");
+        addAccAction1("身体颤抖点头", "Self", "ItemHead", "FHMods_Sub_身体颤抖着点头", "SourceCharacter浑身颤抖的点了点头.", ACT_Path, "RestHead");
+        addAccAction1("身体颤抖摇头", "Self", "ItemHead", "FHMods_Sub_身体颤抖着摇头", "SourceCharacter浑身颤抖的摇了摇头.", ACT_Path, "RestHead");
+        addAccAction1("看向它", "Other", "ItemHead", "FHMods_Sub_看向它", "SourceCharacter看向了TargetCharacter.", ACT_Path, "RestHead");
         
         //鼻子
-        addAccAction1("呼吸渐渐紊乱", "Self", "ItemNose", "FHMods_呼吸渐渐紊乱", "SourceCharacter呼吸渐渐的开始变得紊乱了起来.", ACT_Path, "Kiss");
-        addAccAction1("呼吸渐渐恢复", "Self", "ItemNose", "FHMods_呼吸渐渐恢复", "SourceCharacter呼吸渐渐的回到了平时的状态.", ACT_Path, "Kiss");
+        addAccAction1("呼吸渐渐紊乱", "Self", "ItemNose", "FHMods_Sub_呼吸渐渐紊乱", "SourceCharacter的呼吸渐渐的紊乱了起来.", ACT_Path, "Bite");
+        addAccAction1("呼吸渐渐恢复", "Self", "ItemNose", "FHMods_Sub_呼吸渐渐恢复", "SourceCharacter的呼吸渐渐的回到了平时的状态.", ACT_Path, "Bite");
 
         //嘴
-        addAccAction1("轻轻的喘气", "Self", "ItemMouth", "FHMods_轻轻的喘气", "SourceCharacter轻轻的喘着气.", ACT_Path, "Kiss");
-        addAccAction1("面色潮红的喘气", "Self", "ItemMouth", "FHMods_面色潮红的喘气", "SourceCharacter因为快感而面色潮红的喘着的粗气.", ACT_Path, "Kiss");
-        addAccAction1("嘟囔着想说什么", "Self", "ItemMouth", "FHMods_嘟囔着想说什么", "SourceCharacter嘟囔着似乎想说什么.", ACT_Path, "Kiss");
+        addAccAction1("马娘兴奋的嘶鸣", "Self", "ItemMouth", "FHMods_Sub_马娘兴奋的嘶鸣", "SourceCharacter兴奋的发出了嘶鸣声.", ACT_Path_ItemMouth, "PonyGag");
+
+        addAccAction1("轻轻的喘气", "Self", "ItemMouth", "FHMods_Sub_轻轻的喘气", "SourceCharacter轻轻的喘着气.", ACT_Path, "Whisper");
+        addAccAction1("面色潮红的喘气", "Self", "ItemMouth", "FHMods_Sub_面色潮红的喘气", "SourceCharacter因为快感而面色潮红的喘着的粗气.", ACT_Path, "Whisper");
+        addAccAction1("嘟囔着想说什么", "Self", "ItemMouth", "FHMods_Sub_嘟囔着想说什么", "SourceCharacter嘟囔着似乎想说什么.", ACT_Path, "MoanGagTalk");
+        addAccAction1("慢慢的伸出舌头", "Self", "ItemMouth", "FHMods_Sub_慢慢的伸出舌头", "SourceCharacter慢慢的伸出了PronounPossessive的舌头.", ACT_Path, "MasturbateTongue");
+        addAccAction1("兴奋的伸出舌头", "Self", "ItemMouth", "FHMods_Sub_兴奋的伸出舌头", "SourceCharacter兴奋的伸出了PronounPossessive的舌头.", ACT_Path, "MasturbateTongue");
+        addAccAction1("失神的伸出舌头", "Self", "ItemMouth", "FHMods_Sub_失神的伸出舌头", "SourceCharacter双目失神的伸出了PronounPossessive的舌头.", ACT_Path, "MasturbateTongue");
 
         //耳朵
-        addAccAction1("抖抖耳朵1", "Self", "ItemEars", "FHMods_抖抖耳朵1", "SourceCharacter晃了晃PronounPossessive那对毛茸茸的耳朵.", ACT_Path, "Kiss");
-        addAccAction1("抖抖耳朵2", "Self", "ItemEars", "FHMods_抖抖耳朵2", "SourceCharacter摇了摇PronounPossessive那对软乎乎的耳朵.", ACT_Path, "Kiss");
-        addAccAction1("轻轻的晃动耳朵", "Self", "ItemEars", "FHMods_轻轻的晃动耳朵", "SourceCharacter轻轻的摇晃着PronounPossessive那对软乎乎的耳朵.", ACT_Path, "Kiss");
-        addAccAction2("用手摸耳朵", "ItemEars", "FHMods_用手摸耳朵", "SourceCharacter用手摸了下PronounPossessive的耳朵.", "SourceCharacter用手摸了下TargetCharacter的耳朵.", ACT_Path, "Wiggle");
+        addAccAction1("抖抖耳朵1", "Self", "ItemEars", "FHMods_Sub_晃耳朵", "SourceCharacter晃了晃PronounPossessive的耳朵.", ACT_Path_Ear, "KittenEars2");
+        addAccAction1("抖抖耳朵2", "Self", "ItemEars", "FHMods_Sub_摇耳朵", "SourceCharacter摇了摇PronounPossessive的耳朵.", ACT_Path_Ear, "KittenEars2");
+        addAccAction1("轻轻的晃动耳朵", "Self", "ItemEars", "FHMods_Sub_轻轻的晃动耳朵", "SourceCharacter轻轻的晃动着PronounPossessive的耳朵.", ACT_Path_Ear, "KittenEars2");
+        addAccAction2("用手摸耳朵", "ItemEars", "FHMods_Sub_用手摸耳朵", "SourceCharacter用手摸了下PronounPossessive的耳朵.", "SourceCharacter用手摸了下TargetCharacter的耳朵.", ACT_Path_Ear, "KittenEars2");
         
         //脖子
-        addAccAction1("蹭脖子", "Other", "ItemNeck", "FHMods_蹭脖子", "SourceCharacter用脸蹭了蹭TargetCharacter的脖子.", ACT_Path, "Kiss");
-        addAccAction1("缩脖子", "Self", "ItemNeck", "FHMods_缩脖子", "SourceCharacter缩了下PronounPossessive的脖子.", ACT_Path, "Kiss");
-        addAccAction1("歪头并表达疑惑", "Self", "ItemNeck", "FHMods_歪头并表达疑惑", "SourceCharacter歪着头看起来有些疑惑.", ACT_Path, "Kiss");
+        addAccAction1("蹭脖子", "Other", "ItemNeck", "FHMods_Sub_蹭脖子", "SourceCharacter用脸蹭了蹭TargetCharacter的脖子.", ACT_Path, "RestHead");
+        addAccAction1("缩脖子", "Self", "ItemNeck", "FHMods_Sub_缩脖子", "SourceCharacter缩了下PronounPossessive的脖子.", ACT_Path, "RestHead");
+        addAccAction1("歪头并表达疑惑", "Self", "ItemNeck", "FHMods_Sub_歪头并表达疑惑", "SourceCharacter歪着头看起来有些疑惑.", ACT_Path, "RestHead");
 
         //胸部
-        addAccAction1("蹭乳房", "Other", "ItemBreast", "FHMods_蹭乳房", "SourceCharacter蹭了蹭TargetCharacter的双乳.", ACT_Path, "Wiggle");
+        addAccAction1("用头蹭乳房", "Other", "ItemBreast", "FHMods_Sub_用头蹭乳房", "SourceCharacter用头蹭了蹭TargetCharacter的双乳.", ACT_Path, "Wiggle");
+        addAccAction1("用脸蹭乳房", "Other", "ItemBreast", "FHMods_Sub_用脸蹭乳房", "SourceCharacter用脸蹭了蹭TargetCharacter的双乳.", ACT_Path, "Wiggle");
 
         //身体
-        addAccAction1("扭动身子", "Self", "ItemTorso", "FHMods_扭动身子", "SourceCharacter稍微活动了下PronounPossessive的身体.", ACT_Path, "Wiggle");
-        addAccAction1("活动四肢", "Self", "ItemTorso", "FHMods_活动四肢", "SourceCharacter稍微活动了下PronounPossessive的四肢.", ACT_Path, "Wiggle");
-        addAccAction1("兴奋的扭动身子", "Self", "ItemTorso", "FHMods_兴奋的扭动身子", "SourceCharacter看起来有些兴奋并扭动着PronounPossessive的身体.", ACT_Path, "Wiggle");
+        addAccAction1("扭动身子", "Self", "ItemTorso", "FHMods_Sub_扭动身子", "SourceCharacter稍微活动了下PronounPossessive的身体.", ACT_Path, "Wiggle");
+        addAccAction1("活动四肢", "Self", "ItemTorso", "FHMods_Sub_活动四肢", "SourceCharacter稍微活动了下PronounPossessive的四肢.", ACT_Path, "Wiggle");
+        addAccAction1("兴奋的扭动身子", "Self", "ItemTorso", "FHMods_Sub_兴奋的扭动身子", "SourceCharacter看起来有些兴奋并扭动着PronounPossessive的身体.", ACT_Path, "Wiggle");
 
         //手臂
-        addAccAction2("蹭手臂", "ItemArms", "FHMods_蹭手臂", "SourceCharacter蹭了蹭PronounPossessive的手臂.", "SourceCharacter蹭了蹭TargetCharacter的手臂.", ACT_Path, "Wiggle");
-        addAccAction1("用鼻子蹭手臂", "Self", "ItemArms", "FHMods_用鼻子蹭手臂", "SourceCharacter用鼻子蹭了蹭TargetCharacter的手臂.", ACT_Path, "Wiggle");
+        addAccAction1("用头蹭手臂", "Other", "ItemArms", "FHMods_Sub_用头蹭手臂", "SourceCharacter用头蹭了蹭TargetCharacter的手臂.", ACT_Path, "RestHead");
+        addAccAction1("用脸蹭手臂", "Other", "ItemArms", "FHMods_Sub_用脸蹭手臂", "SourceCharacter用脸蹭了蹭TargetCharacter的手臂.", ACT_Path, "RestHead");
+        addAccAction1("用鼻子蹭手臂", "Self", "ItemArms", "FHMods_Sub_用鼻子蹭手臂", "SourceCharacter用鼻子蹭了蹭TargetCharacter的手臂.", ACT_Path, "RestHead");
 
         //手
-        addAccAction2("蹭手", "ItemHands", "FHMods_蹭手", "SourceCharacter蹭了蹭PronounPossessive的手.", "SourceCharacter蹭了蹭TargetCharacter的手.", ACT_Path, "Wiggle");
-        addAccAction1("用鼻子蹭手", "Other", "ItemHands", "FHMods_用鼻子蹭手", "SourceCharacter用鼻子蹭了蹭TargetCharacter的手.", ACT_Path, "Wiggle");
+        addAccAction1("用头蹭手", "Other", "ItemHands", "FHMods_Sub_用头蹭手", "SourceCharacter用头蹭了蹭TargetCharacter的手.", ACT_Path, "RestHead");
+        addAccAction1("用脸蹭手", "Other", "ItemHands", "FHMods_Sub_用脸蹭手", "SourceCharacter用脸蹭了蹭TargetCharacter的手.", ACT_Path, "RestHead");
+        addAccAction1("用鼻子蹭手", "Self", "ItemHands", "FHMods_Sub_用鼻子蹭手", "SourceCharacter用鼻子蹭了蹭TargetCharacter的手.", ACT_Path, "RestHead");
+
+        //大腿
+        addAccAction1("用头蹭大腿", "Other", "ItemLegs", "FHMods_Sub_用头蹭大腿", "SourceCharacter用头蹭了蹭TargetCharacter的大腿.", ACT_Path, "RestHead");
+        addAccAction1("用脸蹭大腿", "Other", "ItemLegs", "FHMods_Sub_用脸蹭大腿", "SourceCharacter用脸蹭了蹭TargetCharacter的大腿.", ACT_Path, "RestHead");
+
+        //小腿
+        addAccAction1("用头蹭小腿", "Other", "ItemFeet", "FHMods_Sub_用头蹭小腿", "SourceCharacter用头蹭了蹭TargetCharacter的小腿.", ACT_Path, "RestHead");
+        addAccAction1("用脸蹭小腿", "Other", "ItemFeet", "FHMods_Sub_用脸蹭小腿", "SourceCharacter用脸蹭了蹭TargetCharacter的小腿.", ACT_Path, "RestHead");
 
         //脚
-        addAccAction1("蹭脚", "Other", "ItemBoots", "FHMods_蹭脚", "SourceCharacter蹭了蹭TargetCharacter的脚.", ACT_Path, "Wiggle");
+        addAccAction1("用头蹭脚", "Other", "ItemBoots", "FHMods_Sub_用头蹭脚", "SourceCharacter用头蹭了蹭TargetCharacter的脚.", ACT_Path, "RestHead");
+        addAccAction1("用脸蹭脚", "Other", "ItemBoots", "FHMods_Sub_用脸蹭脚", "SourceCharacter用脸蹭了蹭TargetCharacter的脚.", ACT_Path, "RestHead");
+        addAccAction1("生气的跺脚", "Self", "ItemBoots", "FHMods_Sub_生气的跺脚", "SourceCharacter生气的跺了几下TargetCharacter的脚.", ACT_Path_Shoes, "WoollyBootsTall");
+        
+        addAccAction1("马娘随意的踏蹄", "Self", "ItemBoots", "FHMods_Sub_马娘随意的踏蹄", "SourceCharacter随意的踩了几下蹄,发出些许马蹄声.", ACT_Path_Shoes, "PonyBoots");
+        addAccAction1("马娘兴奋的踏蹄", "Self", "ItemBoots", "FHMods_Sub_马娘兴奋的踏蹄", "SourceCharacter兴奋的踩了几下蹄.", ACT_Path_Shoes, "PonyBoots");
+        addAccAction1("马娘不安的踏蹄", "Self", "ItemBoots", "FHMods_Sub_马娘不安的踏蹄", "SourceCharacter感到了不安,慌乱的向后退.", ACT_Path_Shoes, "PonyBoots");
 
         next(args);
     });
+
+    const CustomPrerequisiteFuncs = new Map();
+
+    // 判断短马蹄靴/马蹄靴
+    CustomPrerequisiteFuncs.set("HasPonyBoots", (source, target, group) =>
+        InventoryIsItemInList(source, "ItemBoots", "PonyBoots") 
+        || InventoryIsItemInList(source, "ItemBoots", "ShortPonyBoots")
+        || InventoryIsItemInList(source, "Shoes", "PonyBoots"));
+
+    // 判断马的缰绳之类的马具
+    CustomPrerequisiteFuncs.set("HasPonyGag", (source, target, group) =>
+        InventoryIsItemInList(source, "ItemMouth", "PonyGag")
+        || InventoryIsItemInList(source, "ItemMouth", "HarnessPanelGag")
+        || InventoryIsItemInList(source, "ItemMouth", "HarnessBallGag"));
+
+    CustomPrerequisiteFuncs.set("NotKneelingAll", (source, target, group) => !source.IsKneeling() && !target.IsKneeling()); // 都没有跪下
+    CustomPrerequisiteFuncs.set("IsKneelingAll", (source, target, group) => source.IsKneeling() && target.IsKneeling()); // 都跪下
+    CustomPrerequisiteFuncs.set("IsKneelingSource", (source, target, group) => source.IsKneeling() && !target.IsKneeling()); // 发起者跪下但目标没有
+    CustomPrerequisiteFuncs.set("NotKneelingT", (source, target, group) => {
+        // 都跪下或者都没有跪下
+        return (!source.IsKneeling() && !target.IsKneeling()) || (source.IsKneeling() && target.IsKneeling())
+    }); 
 
     activitiesAll.forEach((activity) => {
         ActivityFemale3DCG.push(activity);

@@ -12,10 +12,34 @@
 		repository: 'https://github.com/FuhuiNeko/BC_Mods/',
 	});
 
+    var NowAdminList = [];
+
     //如果你改了前置的部署地址,请修改这里
     const NeteaseMusicAPI = "http://localhost:3000";
     var musicPlayerLimit = []; //限制请求速率
     const LimitSpeed = 10000; //10秒
+
+    mod.hookFunction("ChatRoomSync", 0, (args, next) => {
+        console.log("同步房间","当前房间人数",ChatRoomData?.Character.length);
+        next(args);
+    });
+
+    mod.hookFunction("ChatRoomSyncCharacter", 0, (args, next) => {
+        console.log("同步房间人物","当前房间人数",ChatRoomData?.Character.length);
+        next(args);
+    });
+
+    //进入房间
+    mod.hookFunction("ChatRoomSyncMemberJoin", 0, (args, next) => {
+        console.log("有人进入","当前房间人数",ChatRoomData?.Character.length);
+        next(args);
+    });
+
+    //大概是离开房间
+    mod.hookFunction("ChatRoomSyncMemberLeave", 0 ,(args, next) => {
+        console.log("有人退出","当前房间人数",ChatRoomData?.Character.length);
+        next(args);
+    });
 
     mod.hookFunction("ChatRoomMessage", 0, (args, next) => {
         let res = args[0];

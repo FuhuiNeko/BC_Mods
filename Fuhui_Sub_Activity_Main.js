@@ -26,7 +26,7 @@
     //图片替换喵
     mod.hookFunction("DrawImageResize", 1, (args, next) => {
         var path = args[0];
-        if (!!path && path.indexOf("FHMods_Sub_") > -1) {
+        if (typeof path === 'string' && path.indexOf("FHMods_Sub_") > -1) {
             var activityName = path.substring(path.indexOf("FHMods_Sub_"));
             activityName = activityName.substring(0, activityName.indexOf(".png"))
             if (CustomImages.has(activityName))
